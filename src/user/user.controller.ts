@@ -19,51 +19,37 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
   @Get()
   async list() {
-    return { users: [] };
+    return this.userService.list();
   }
 
   @Get(':id')
-  async readOne(@Param() @Param('id', ParseIntPipe) id: number) {
-    return { user: {}, id };
+  async readOne(@Param('id', ParseIntPipe) id: number) {
+    return this.userService.show(id);
   }
 
   @Post()
-  async create(@Body() { name, email, password }: CreateUserDTO) {
-    return this.userService.create({ name, email, password });
+  async create(@Body() data: CreateUserDTO) {
+    return this.userService.create(data);
   }
 
   @Put(':id')
   async update(
-    @Body() { name, email, password }: UpdateUserDTO,
+    @Body() data: UpdateUserDTO,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return {
-      method: 'put',
-      name,
-      email,
-      password,
-      id,
-    };
+    return this.userService.update(id, data);
   }
 
   @Patch(':id')
   async updateParcial(
-    @Body() { name, email, password }: UpdatePatchUserDTO,
+    @Body() data: UpdatePatchUserDTO,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return {
-      method: 'patch',
-      name,
-      email,
-      password,
-      id,
-    };
+    return this.userService.updatePartial(id, data);
   }
 
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number) {
-    return {
-      id,
-    };
+    return this.userService.delete(id);
   }
 }
