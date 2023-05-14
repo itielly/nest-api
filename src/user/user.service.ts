@@ -3,21 +3,21 @@ import { CreateUserDTO } from './dto/create-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateUserDTO } from './dto/update-user.dto';
 import { UpdatePatchUserDTO } from './dto/update-patch.dto';
+import * as bcrypt from 'bcrypt';
 
-@Injectable({})
+@Injectable()
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
-  async create({ email, name, password, birthAt }: CreateUserDTO) {
-    if (!birthAt) {
-      birthAt = null;
+
+  async create(data: CreateUserDTO) {
+    if (!data.birthAt) {
+      data.birthAt = null;
     }
+
+    data.password = await bcrypt.hash(data.password, await bcrypt.genSalt());
+
     return this.prisma.user.create({
-      data: {
-        email,
-        name,
-        password,
-        birthAt,
-      },
+      data,
     });
   }
 
@@ -34,14 +34,21 @@ export class UserService {
     });
   }
 
-  async update(id: number, { email, name, password, birthAt }: UpdateUserDTO) {
+  async update(
+    id: number,
+    { email, name, password, birthAt, role }: UpdateUserDTO,
+  ) {
     await this.exists(id);
+
+    password = await bcrypt.hash(password, await bcrypt.genSalt());
+
     return this.prisma.user.update({
       data: {
         email,
         name,
         password,
         birthAt: birthAt ? new Date(birthAt) : null,
+        role: role,
       },
       where: {
         id,
@@ -51,7 +58,7 @@ export class UserService {
 
   async updatePartial(
     id: number,
-    { email, name, password, birthAt }: UpdatePatchUserDTO,
+    { email, name, password, birthAt, role }: UpdatePatchUserDTO,
   ) {
     await this.exists(id);
     const data: any = {};
@@ -69,7 +76,11 @@ export class UserService {
     }
 
     if (password) {
-      data.password = password;
+      data.password = await bcrypt.hash(password, await bcrypt.genSalt());
+    }
+
+    if (role) {
+      data.role = role;
     }
 
     return this.prisma.user.update({
@@ -91,7 +102,13 @@ export class UserService {
   }
 
   async exists(id: number) {
-    if (!(await this.show(id))) {
+    if (
+      !(await this.prisma.user.count({
+        where: {
+          id,
+        },
+      }))
+    ) {
       throw new NotFoundException('Usuário inexistente');
     }
   }

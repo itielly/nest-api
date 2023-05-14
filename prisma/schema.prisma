@@ -4,15 +4,16 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = "mysql://root:my-password@localhost:3309/mysqlDb"
+  url      = env("DATABASE_URL")
 }
 
 model User {
   id         Int     @id @default(autoincrement())
   name       String @db.VarChar(100)
   email      String @db.VarChar(100)
-  password   String @db.VarChar(30)
+  password   String @db.VarChar(500)
   birthAt    DateTime? @db.Date
+  role       Int      @default(1)
   created_at DateTime @default(now()) @db.Timestamp(0)
   deleted_at DateTime @default(now()) @db.Timestamp(0)
 
